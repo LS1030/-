@@ -111,6 +111,8 @@ void image_scan(void)
 	uint16 i, j;
 	uint16 leftscan,rightscan,leftend,rightend;
 	uint8 leftflag , rightflag ;
+  uint8 rightflagYes = 1;
+  uint8 leftflagYes = 1;
 	//由近及远，前三行全部逐列扫描，用以确定下一行扫描的起止点
 	//前三行扫描时，分别从中间向两边搜索左边沿和右边沿
 	for ( i = CAMERA_H-1; i >=CAMERA_H-3; i--)
@@ -194,7 +196,7 @@ void image_scan(void)
 		
 		for ( j = leftscan; j <= leftend; j++)//搜索左边沿
 		{
-			if (img[i][j] == 0 && img[i][j + 1] == 255)//左边沿特征，相邻两列中，左边黑色右边白色
+			if (img[i][j - 2] == 0 && img[i][j - 1] == 0 && img[i][j] == 0 && img[i][j + 1] == 255)//左边沿特征，相邻两列中，左边黑色右边白色
 			{
 				leftback[i] = j;//该列数确定为该行的左边沿竖坐标
 				leftflag = 1;
@@ -203,7 +205,7 @@ void image_scan(void)
 		}
 		for ( j = rightscan; j >rightend; j--)
 		{
-			if (img[i][j] == 0 && img[i][j - 1] == 255)
+			if (img[i][j + 2] == 0 && img[i][j + 1] == 0 && img[i][j] == 0 && img[i][j - 1] == 255)
 			{
 				rightback[i] = j;
 				rightflag = 2;
@@ -211,37 +213,55 @@ void image_scan(void)
 			}
 		}
 		bianyanflag[i] = leftflag + rightflag;
-//		if (leftflag==0)//每一行扫描完成后进行补充
-//		{
-//			if (bianyanflag[i + 1]==1|| bianyanflag[i + 1] == 3)
-//			{
-//				leftback[i] = leftback[i+1];
-//			}
-//			else
-//			{
-//				leftback[i] = 0;
-//			}
-//		}
-//		if (rightflag == 0)//每一行扫描完成后进行补充
-//		{
-//			if (bianyanflag[i + 1] == 2 || bianyanflag[i + 1] == 3)
-//			{
-//				rightback[i] = rightback[i + 1];
-//			}
-//			else
-//			{
-//				rightback[i] = CAMERA_W-1;
-//			}
-//		}
-                middleline[i]=(rightback[i]+leftback[i])/2;
+   
 	}
-        
-        for(i = CAMERA_H-1; i >0; i--)
+
+
+  for(i = CAMERA_H-1; i >0; i--)
+  {
+    if (rightflagYes==1&&leftflagYes==1)
+    {
+        if (bianyanflag[i] == 3 && (rightback[i]-leftback[i]) < 10)//这种情况说明已经丢失了一个边沿而只剩一条黑道了
+      {
+        int point1,point0=i;
+        for (int k = i-3; k > 3; k--)
         {
-            image[i][middleline[i]] = 0x00;
-            image[i][rightback[i]] = 0x00;
-            image[i][leftback[i]] = 0x00;
+          if (bianyanflag[k] == 3 && (rightback[k]-leftback[k]) < 10)
+          {
+            point1=k;
+            break;
+          }       
         }
+        if (rightback[point1] > rightback[point0] && leftback[point1] > leftback[point0])
+        {
+          rightflagYes=0;//右边沿无效
+        }
+        else if (rightback[point1] < rightback[point0] && leftback[point1] < leftback[point0])
+        {
+          leftflagYes=0;
+        }   
+      }
+    }
+    
+    if (rightflagYes==0)
+    {
+      rightback[i]=CAMERA_W-3;
+    }
+    else if (leftflagYes==0)
+    {
+      leftback[i]=3;    
+    }
+     middleline[i]=(rightback[i]+leftback[i])/2;
+  }     
+
+
+
+  for(i = CAMERA_H-1; i >0; i--)
+  {
+      image[i][middleline[i]] = 0x00;
+      image[i][rightback[i]] = 0x00;
+      image[i][leftback[i]] = 0x00;
+  }
     
         
 }
