@@ -279,11 +279,11 @@ uint8 Get_Middle(void)
 		midline1_L = (rightback[midline1_H] + leftback[midline1_H]) / 2;
 		midline2_L = (rightback[midline2_H] + leftback[midline2_H]) / 2;
 		midline3_L = (rightback[midline3_H] + leftback[midline3_H]) / 2;
-		if ((midline1_L+ midline2_L+ midline3_L)/3 < CAMERA_W/2)
+		if ((midline1_L+ midline2_L+ midline3_L)/3 < CAMERA_W/2 - 10)   //10ÁĞµÄÓàÁ¿
 		{
 			flag = 1;
 		}
-		else if ((midline1_L + midline2_L + midline3_L)/3 > CAMERA_W / 2)
+		else if ((midline1_L + midline2_L + midline3_L)/3 > CAMERA_W / 2 + 10)
 		{
 			flag = 2;
 		}
